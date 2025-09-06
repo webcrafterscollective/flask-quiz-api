@@ -1,4 +1,4 @@
-# render.yaml (Final Version with Admin Creation)
+# render.yaml (Final Version with FLASK_APP)
 
 databases:
   # 1. A PostgreSQL Database
@@ -13,7 +13,7 @@ services:
     plan: free
     healthCheckPath: /api/health
     buildCommand: "pip install -r requirements.txt"
-    # WORKAROUND: Chain the migration, admin creation, and server start commands.
+    # Chain the migration, admin creation, and server start commands
     startCommand: "flask db upgrade && flask create-admin && gunicorn manage:app --bind 0.0.0.0:$PORT"
     envVars:
       - key: DATABASE_URL
@@ -22,7 +22,9 @@ services:
           property: connectionString
       - key: PYTHON_VERSION
         value: 3.11.13
-      # Add your other secrets in the Render dashboard's Environment tab
+      - key: FLASK_APP # <-- THIS IS THE FIX
+        value: manage.py
+      # Your other secrets are added via the Render dashboard
       - key: SECRET_KEY
         sync: false
       - key: JWT_SECRET_KEY
