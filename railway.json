@@ -4,7 +4,7 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "preDeployCommand": "flask db upgrade",
+    "preDeployCommand": "FLASK_APP=manage:app flask db upgrade",
     "startCommand": "gunicorn manage:app",
     "healthcheckPath": "/api/health",
     "healthcheckTimeout": 100,
