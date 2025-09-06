@@ -24,7 +24,10 @@ def create_quiz():
     quiz = Quiz(
         title=payload['title'],
         description=payload.get('description'),
-        is_published=payload.get('is_published', False)
+        is_published=payload.get('is_published', False),
+        # --- Add this line ---
+        time_limit_minutes=payload.get('time_limit_minutes')
+        # --- End of change ---
     )
 
     for q_data in payload.get('questions', []):

@@ -1,4 +1,6 @@
 from datetime import datetime
+
+from sqlalchemy import UniqueConstraint
 from .extensions import db
 from passlib.hash import pbkdf2_sha256
 
@@ -23,6 +25,9 @@ class Quiz(db.Model):
     description = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     is_published = db.Column(db.Boolean, default=False)
+    # --- Add this line ---
+    time_limit_minutes = db.Column(db.Integer, nullable=True) # In minutes
+    # --- End of change ---
     questions = db.relationship('Question', backref='quiz', lazy=True, cascade='all, delete-orphan')
 
 class Question(db.Model):
@@ -39,8 +44,26 @@ class Choice(db.Model):
     text = db.Column(db.String(500), nullable=False)
     is_correct = db.Column(db.Boolean, default=False)
 
+class QuizAttempt(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    quiz_id = db.Column(db.Integer, db.ForeignKey('quiz.id'), nullable=False)
+    start_time = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    end_time = db.Column(db.DateTime, nullable=True)
+    status = db.Column(db.String(20), default='in-progress', nullable=False) # e.g., 'in-progress', 'submitted', 'time_expired'
+    final_score = db.Column(db.Float, nullable=True)
+    
+    # A user can only have one 'in-progress' attempt for any given quiz
+    __table_args__ = (
+        UniqueConstraint('user_id', 'quiz_id', name='_user_quiz_uc'),
+    )
+
+
 class Submission(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    # --- Add this line ---
+    attempt_id = db.Column(db.Integer, db.ForeignKey('quiz_attempt.id'), nullable=False)
+    # --- End of change ---
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     quiz_id = db.Column(db.Integer, db.ForeignKey('quiz.id'), nullable=True)
     question_id = db.Column(db.Integer, db.ForeignKey('question.id'), nullable=True)

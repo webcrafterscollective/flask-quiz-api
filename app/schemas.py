@@ -31,4 +31,7 @@ class QuizSchema(Schema):
     title = fields.Str(required=True)
     description = fields.Str()
     is_published = fields.Bool(load_default=False)
+    # --- Add this line ---
+    time_limit_minutes = fields.Int(allow_none=True, load_default=None)
+    # --- End of change ---
     questions = fields.List(fields.Nested(QuestionSchema), required=True)

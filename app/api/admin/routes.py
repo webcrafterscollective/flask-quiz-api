@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from datetime import datetime
 
 from ...extensions import db
-from ...models import Submission
+from ...models import Submission, QuizAttempt # Import QuizAttempt
 from .. import api_bp
 from .decorators import admin_required
 
@@ -53,9 +53,26 @@ def grade_submission(submission_id):
     submission.graded = True
     submission.graded_at = datetime.utcnow()
     
+    # --- Start of new logic ---
+    # After grading, find the parent attempt and update its score and status
+    attempt = db.session.get(QuizAttempt, submission.attempt_id)
+    if attempt:
+        # Get all submissions for this attempt
+        all_submissions = Submission.query.filter_by(attempt_id=attempt.id).all()
+        
+        # Check if all submissions are now graded
+        all_graded = all(s.graded for s in all_submissions)
+        
+        if all_graded:
+            # Recalculate the total score for the entire attempt
+            total_score = sum(s.score for s in all_submissions if s.score is not None)
+            attempt.final_score = total_score
+            attempt.status = 'graded' # Update status to 'graded'
+            
+    # --- End of new logic ---
+
     db.session.commit()
     return jsonify({'msg': 'Submission graded successfully'})
 
 # Register this blueprint with the main API blueprint
 api_bp.register_blueprint(admin_bp)
-
