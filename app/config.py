@@ -20,11 +20,8 @@ class DevelopmentConfig(Config):
 class ProductionConfig(Config):
     """Production configuration."""
     FLASK_ENV = 'production'
-    # --- CHANGE THIS ---
-    # The DATABASE_URL will be set directly asSQLALCHEMY_DATABASE_URI in the environment
-    SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI')
-    # --- END OF CHANGE ---
-    # Use a more robust rate limiter storage in production, like Redis
+    # This correctly reads the database URL provided by Railway
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
     RATELIMIT_STORAGE_URL = os.environ.get('RATELIMIT_STORAGE_URL')
 
 # Dictionary to access config classes by name
