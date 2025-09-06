@@ -209,11 +209,15 @@ def get_attempt(attempt_id):
 
     quiz = db.session.get(Quiz, attempt.quiz_id)
 
-       # --- START: Calculate elapsed time on the server ---
+    # --- START: Robust Elapsed Time Calculation ---
     elapsed_seconds = 0
     if attempt.start_time:
-        # Assumes start_time is a timezone-aware UTC datetime from the DB
-        elapsed_delta = datetime.now(timezone.utc) - attempt.start_time
+        # Make the start_time timezone-aware if it's naive (for old records)
+        start_time = attempt.start_time
+        if start_time.tzinfo is None:
+            start_time = start_time.replace(tzinfo=timezone.utc)
+            
+        elapsed_delta = datetime.now(timezone.utc) - start_time
         elapsed_seconds = int(elapsed_delta.total_seconds())
     # --- END ---
 
@@ -223,7 +227,7 @@ def get_attempt(attempt_id):
     return jsonify({
         'attempt': attempt_schema.dump(attempt),
         'quiz': quiz_schema.dump(quiz),
-        'elapsed_seconds': elapsed_seconds # Add to the response
+        'elapsed_seconds': elapsed_seconds
     })
 
 # Register this blueprint with the main API blueprint
