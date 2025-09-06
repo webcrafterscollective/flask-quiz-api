@@ -1,2 +1,2 @@
-release: pip install -r requirements.txt && flask db upgrade
+release: flask db upgrade
 web: gunicorn manage:app
