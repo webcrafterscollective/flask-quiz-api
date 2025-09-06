@@ -20,8 +20,10 @@ class DevelopmentConfig(Config):
 class ProductionConfig(Config):
     """Production configuration."""
     FLASK_ENV = 'production'
-    # Ensure DATABASE_URL is set in production environment
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
+    # --- CHANGE THIS ---
+    # The DATABASE_URL will be set directly asSQLALCHEMY_DATABASE_URI in the environment
+    SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI')
+    # --- END OF CHANGE ---
     # Use a more robust rate limiter storage in production, like Redis
     RATELIMIT_STORAGE_URL = os.environ.get('RATELIMIT_STORAGE_URL')
 
