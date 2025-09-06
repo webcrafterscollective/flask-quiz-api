@@ -1,12 +1,9 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from datetime import datetime, timedelta
-
-# Correctly import from the new structure
+from datetime import datetime, timedelta, timezone
 from ...extensions import db
 from ...models import Submission, Question, Quiz, QuizAttempt, User
 from .. import api_bp
-# --- MODIFICATION: Import schemas ---
 from ...schemas import QuizAttemptSchema, QuizSchema
 
 
@@ -212,12 +209,21 @@ def get_attempt(attempt_id):
 
     quiz = db.session.get(Quiz, attempt.quiz_id)
 
+       # --- START: Calculate elapsed time on the server ---
+    elapsed_seconds = 0
+    if attempt.start_time:
+        # Assumes start_time is a timezone-aware UTC datetime from the DB
+        elapsed_delta = datetime.now(timezone.utc) - attempt.start_time
+        elapsed_seconds = int(elapsed_delta.total_seconds())
+    # --- END ---
+
     attempt_schema = QuizAttemptSchema()
     quiz_schema = QuizSchema()
 
     return jsonify({
         'attempt': attempt_schema.dump(attempt),
-        'quiz': quiz_schema.dump(quiz)
+        'quiz': quiz_schema.dump(quiz),
+        'elapsed_seconds': elapsed_seconds # Add to the response
     })
 
 # Register this blueprint with the main API blueprint
