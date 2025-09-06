@@ -1,0 +1,42 @@
+# render.yaml
+# This file defines the services for your Flask Quiz API on Render.
+
+services:
+  # 1. A PostgreSQL Database
+  - type: pserv
+    name: quiz-database
+    # This name will be used in the DATABASE_URL below
+    env: postgres
+    plan: free # Use the free instance type
+    databaseName: quiz_db
+    user: quiz_user
+
+  # 2. Your Flask Web Service
+  - type: web
+    name: flask-quiz-api
+    env: python
+    plan: free # Use the free instance type
+    buildCommand: "pip install -r requirements.txt"
+    # Render automatically detects and uses your Procfile for these commands!
+    # It will use 'release' for the pre-deploy command and 'web' for the start command.
+    healthCheckPath: /api/health # Uses your existing health check endpoint
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: quiz-database
+          property: connectionString
+      - key: PYTHON_VERSION
+        value: 3.11.13
+      # IMPORTANT: Add your other secrets in the Render dashboard
+      - key: SECRET_KEY
+        sync: false
+      - key: JWT_SECRET_KEY
+        sync: false
+      - key: ADMIN_USERNAME
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false

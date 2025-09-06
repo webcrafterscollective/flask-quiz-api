@@ -18,8 +18,9 @@ class DevelopmentConfig(Config):
 class ProductionConfig(Config):
     """Production configuration."""
     FLASK_ENV = 'production'
-    # This now correctly reads the variable you set on Railway
-    SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI')
+    # --- CHANGE THIS LINE ---
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') # Changed from SQLALCHEMY_DATABASE_URI
+    # --- END OF CHANGE ---
     RATELIMIT_STORAGE_URL = os.environ.get('RATELIMIT_STORAGE_URL')
 
 config_by_name = {
