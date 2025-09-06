@@ -6,7 +6,9 @@ from datetime import datetime, timedelta
 from ...extensions import db
 from ...models import Submission, Question, Quiz, QuizAttempt, User
 from .. import api_bp
+# --- MODIFICATION: Import schemas ---
 from ...schemas import QuizAttemptSchema, QuizSchema
+
 
 # Create a blueprint for submission-related routes
 submission_bp = Blueprint('submission', __name__)
@@ -164,12 +166,18 @@ def submit_answers(attempt_id):
 def get_my_submissions():
     """Endpoint for users to retrieve their own submission history."""
     user_id = get_jwt_identity()
-    attempts = QuizAttempt.query.filter_by(user_id=user_id).order_by(QuizAttempt.start_time.desc()).limit(50).all()
+    attempts = (
+        db.session.query(QuizAttempt, Quiz.title)
+        .join(Quiz, QuizAttempt.quiz_id == Quiz.id)
+        .filter(QuizAttempt.user_id == user_id)
+        .order_by(QuizAttempt.start_time.desc())
+        .limit(50)
+        .all()
+    )
     
     result = []
-    for a in attempts:
-        # Fetch all individual submissions for this attempt to provide detailed feedback
-        submissions = Submission.query.filter_by(attempt_id=a.id).all()
+    for attempt, quiz_title in attempts:
+        submissions = Submission.query.filter_by(attempt_id=attempt.id).all()
         submission_details = [{
             'question_id': s.question_id,
             'score': s.score,
@@ -177,13 +185,14 @@ def get_my_submissions():
         } for s in submissions]
 
         result.append({
-            'attempt_id': a.id,
-            'quiz_id': a.quiz_id,
-            'status': a.status,
-            'final_score': a.final_score,
-            'start_time': a.start_time.isoformat(),
-            'end_time': a.end_time.isoformat() if a.end_time else None,
-            'details': submission_details # Include detailed feedback
+            'attempt_id': attempt.id,
+            'quiz_id': attempt.quiz_id,
+            'quiz_title': quiz_title, # --- ADDED ---
+            'status': attempt.status,
+            'final_score': attempt.final_score,
+            'start_time': attempt.start_time.isoformat(),
+            'end_time': attempt.end_time.isoformat() if attempt.end_time else None,
+            'details': submission_details
         })
     
     return jsonify(result)
