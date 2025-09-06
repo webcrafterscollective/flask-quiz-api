@@ -1,24 +1,21 @@
-# render.yaml (Final Corrected Version)
-# Defines the services for your Flask Quiz API on Render.
+# render.yaml (Final Version for Render Free Tier)
 
-services:
-  # 1. A PostgreSQL Database (using the correct type 'pserv')
-  - type: pserv
-    name: quiz-database
-    env: postgres # Specifies that this is a managed PostgreSQL service
+databases:
+  # 1. A PostgreSQL Database. This is the correct way to define it.
+  - name: quiz-database
     plan: free
 
+services:
   # 2. Your Flask Web Service
   - type: web
     name: flask-quiz-api
-    env: python # Use the Python runtime environment
+    env: python
     plan: free
     healthCheckPath: /api/health
     buildCommand: "pip install -r requirements.txt"
-    # The 'release' command from your Procfile goes here
-    preDeployCommand: "flask db upgrade"
-    # The 'web' command from your Procfile goes here
-    startCommand: "gunicorn manage:app"
+    # WORKAROUND: Combine migration and start command.
+    # This runs 'flask db upgrade' every time your service starts.
+    startCommand: "flask db upgrade && gunicorn manage:app --bind 0.0.0.0:$PORT"
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -26,7 +23,7 @@ services:
           property: connectionString
       - key: PYTHON_VERSION
         value: 3.11.13
-      # Your secrets will be added via the Render dashboard
+      # Add your other secrets in the Render dashboard's Environment tab
       - key: SECRET_KEY
         sync: false
       - key: JWT_SECRET_KEY
