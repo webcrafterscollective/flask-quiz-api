@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from ...extensions import db
 from ...models import Submission, Question, Quiz, QuizAttempt, User
 from .. import api_bp
+from ...schemas import QuizAttemptSchema, QuizSchema
 
 # Create a blueprint for submission-related routes
 submission_bp = Blueprint('submission', __name__)
@@ -186,6 +187,29 @@ def get_my_submissions():
         })
     
     return jsonify(result)
+
+@submission_bp.route('/quizzes/attempts/<int:attempt_id>', methods=['GET'])
+@jwt_required()
+def get_attempt(attempt_id):
+    """Endpoint for a user to get details of a quiz attempt."""
+    user_id = get_jwt_identity()
+    attempt = db.session.get(QuizAttempt, attempt_id)
+
+    if not attempt:
+        return jsonify({"msg": "Attempt not found"}), 404
+
+    if attempt.user_id != int(user_id):
+        return jsonify({"msg": "This is not your quiz attempt"}), 403
+
+    quiz = db.session.get(Quiz, attempt.quiz_id)
+
+    attempt_schema = QuizAttemptSchema()
+    quiz_schema = QuizSchema()
+
+    return jsonify({
+        'attempt': attempt_schema.dump(attempt),
+        'quiz': quiz_schema.dump(quiz)
+    })
 
 # Register this blueprint with the main API blueprint
 api_bp.register_blueprint(submission_bp)

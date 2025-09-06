@@ -31,7 +31,14 @@ class QuizSchema(Schema):
     title = fields.Str(required=True)
     description = fields.Str()
     is_published = fields.Bool(load_default=False)
-    # --- Add this line ---
     time_limit_minutes = fields.Int(allow_none=True, load_default=None)
-    # --- End of change ---
     questions = fields.List(fields.Nested(QuestionSchema), required=True)
+
+class QuizAttemptSchema(Schema):
+    id = fields.Int(dump_only=True)
+    user_id = fields.Int(required=True)
+    quiz_id = fields.Int(required=True)
+    start_time = fields.DateTime(dump_only=True)
+    end_time = fields.DateTime(dump_only=True)
+    status = fields.Str(dump_only=True)
+    final_score = fields.Float(dump_only=True)
